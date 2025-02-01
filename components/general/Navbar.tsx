@@ -1,13 +1,14 @@
 import Link from "next/link";
-
 import { Button, buttonVariants } from "../ui/button";
 import Image from "next/image";
 import Logo from "@/public/logo.png";
 
-import { Menu } from "lucide-react";
 import { ThemeToggle } from "./ThemeToggle";
+import { auth, signOut } from "@/app/utils/auth";
 
 export async function Navbar() {
+  const session = await auth();
+
   return (
     <nav className="flex justify-between items-center py-5">
       <Link href="/" className="flex items-center gap-2">
@@ -19,7 +20,23 @@ export async function Navbar() {
 
       <div className="flex items-center gap-4">
         <ThemeToggle />
-        <Button>Login</Button>
+        {session?.user ? (
+          <form
+            action={async () => {
+              "use server";
+              await signOut({ redirectTo: "/" });
+            }}
+          >
+            <Button>Logout</Button>
+          </form>
+        ) : (
+          <Link
+            href={"/login"}
+            className={buttonVariants({ variant: "outline", size: "lg" })}
+          >
+            Login
+          </Link>
+        )}
       </div>
     </nav>
   );
