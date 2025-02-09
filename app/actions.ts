@@ -9,6 +9,7 @@ import arcjet, { detectBot, shield } from "./utils/arcjet";
 import { request } from "@arcjet/next";
 import { stripe } from "./utils/stripe";
 import { jobListingDurationPricing } from "./utils/pricingTiers";
+import { inngest } from "./utils/inngest/client";
 
 const aj = arcjet
   .withRule(
@@ -119,8 +120,9 @@ export async function createJob(data: z.infer<typeof jobSchema>) {
       data: { stripeCustomerId: customer.id },
     });
   }
+
   // Create a new job listing
-  const jobpost = await prisma.jobPost.create({
+  const jobPost = await prisma.jobPost.create({
     data: {
       companyId: company.id,
       jobDescription: validatedData.jobDescription,
@@ -134,6 +136,15 @@ export async function createJob(data: z.infer<typeof jobSchema>) {
     },
     select: {
       id: true,
+    },
+  });
+
+  // Trigger the job expiration function
+  await inngest.send({
+    name: "job/created",
+    data: {
+      jobId: jobPost.id,
+      expirationDays: validatedData.listingDuration,
     },
   });
 
@@ -165,7 +176,7 @@ export async function createJob(data: z.infer<typeof jobSchema>) {
       },
     ],
     metadata: {
-      jobId: jobpost.id,
+      jobId: jobPost.id,
     },
     mode: "payment",
     success_url: `${process.env.NEXT_PUBLIC_APP_URL}/payment/success`,
