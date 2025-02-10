@@ -1,9 +1,13 @@
 import { inngest } from "@/app/utils/inngest/client";
-import { handleJobExpiration, helloWorld } from "@/app/utils/inngest/functions";
+import {
+  handleJobExpiration,
+  helloWorld,
+  sendPeriodicJobListings,
+} from "@/app/utils/inngest/functions";
 import { serve } from "inngest/next";
 
 // Create an API that serves zero functions
 export const { GET, POST, PUT } = serve({
   client: inngest,
-  functions: [helloWorld, handleJobExpiration],
+  functions: [helloWorld, handleJobExpiration, sendPeriodicJobListings],
 });
